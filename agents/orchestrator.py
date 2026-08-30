@@ -1,14 +1,3 @@
-# BEFORE
-from deepagents import create_deep_agent
-from langgraph.checkpoint.memory import MemorySaver
-from agents.tools import read_market_data, read_contextual_data, save_research, search_knowledge_base
-
-def create_orchestrator_agent():
-    return create_deep_agent(
-        model="openai:gpt-4o",   # ← change this
-        ...
-    )
-
 # AFTER
 from deepagents import create_deep_agent
 from langgraph.checkpoint.memory import MemorySaver
