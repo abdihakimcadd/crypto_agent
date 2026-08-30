@@ -1,0 +1,13 @@
+deepagents
+langchain-openai
+langgraph
+supabase
+python-dotenv
+aiohttp
+pandas
+numpy
+fastapi
+uvicorn
+supabase
+requests
+python-dotenv
