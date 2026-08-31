@@ -12,7 +12,7 @@ def get_volume_snapshot(symbol: str) -> dict:
 
 def get_indicator_snapshot(symbol: str) -> dict:
     """Read latest EMA/MACD events for a symbol."""
-    res = supabase.table("indicator_snapshot").select("*").eq("symbol", symbol).execute()
+    res = supabase.table("indicator_snapshots").select("*").eq("symbol", symbol).execute()
     return res.data[0] if res.data else {}
 
 
