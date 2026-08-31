@@ -7,7 +7,7 @@ import aiohttp
 from db.supabase_client import supabase
 
 BINANCE_API = "https://api.binance.com/api/v3/klines"
-COINGECKO_NEWS = "https://api.coingecko.com/api/v3/news""
+COINGECKO_NEWS = "https://api.coingecko.com/api/v3/news"
 
 # In-memory store for the current pipeline run
 _current_run_data = {
@@ -36,23 +36,33 @@ def get_market_data(symbol: str) -> dict:
 async def fetch_news() -> list:
     """Fetch latest crypto news from CoinGecko. Returns in-memory list.
     No DB write. No news_items table.
+
+    Never raises — on any failure (network, DNS, bad response), logs the
+    error and returns an empty list so the rest of the pipeline still runs.
     """
-    async with aiohttp.ClientSession() as session:
-        async with session.get(COINGECKO_NEWS) as resp:
-            data = await resp.json()
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(COINGECKO_NEWS, timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                resp.raise_for_status()
+                data = await resp.json()
 
-    items = []
-    for item in data.get("data", []):
-        items.append({
-            "id": item.get("id"),
-            "headline": item.get("title"),
-            "source": item.get("source", "coingecko"),
-            "published_at": item.get("published_at"),
-            "url": item.get("url"),
-        })
+        # CoinGecko's /news endpoint returns a plain JSON array, not {"data": [...]}
+        items = []
+        for item in data:
+            items.append({
+                "headline": item.get("title"),
+                "source": item.get("source_name", "coingecko"),
+                "published_at": item.get("posted_at"),
+                "url": item.get("url"),
+            })
 
-    _current_run_data["news"] = items
-    return items
+        _current_run_data["news"] = items
+        return items
+
+    except Exception as e:
+        print(f"News fetch failed, continuing without news: {e}")
+        _current_run_data["news"] = []
+        return []
 
 
 def get_current_news() -> list:
@@ -66,10 +76,16 @@ async def fetch_onchain(symbol: str) -> list:
     """Fetch whale activity for a symbol. Returns in-memory list.
     No DB write.
     """
-    # TODO: Replace with Arkham/Nansen/Etherscan API
-    events = []  # stub
-    _current_run_data["onchain"][symbol] = events
-    return events
+    try:
+        # TODO: Replace with Arkham/Nansen/Etherscan API
+        events = []  # stub
+        _current_run_data["onchain"][symbol] = events
+        return events
+
+    except Exception as e:
+        print(f"On-chain fetch failed for {symbol}, continuing without it: {e}")
+        _current_run_data["onchain"][symbol] = []
+        return []
 
 
 def get_current_onchain(symbol: str) -> list:
