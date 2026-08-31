@@ -7,7 +7,7 @@ import aiohttp
 from db.supabase_client import supabase
 
 BINANCE_API = "https://api.binance.com/api/v3/klines"
-COINGECKO_NEWS = "https://newsapi.coingecko.com/v1/news"
+COINGECKO_NEWS = "https://api.coingecko.com/api/v3/news""
 
 # In-memory store for the current pipeline run
 _current_run_data = {
